@@ -19,17 +19,23 @@
 - [x] `done` — `docker-compose.yml` com Postgres local
 - [x] `done` — `.env.example` em cada app
 
-> Nota: `packages/shared` (`@kpmg/shared`) é consumido via build (`dist/`)
-> — rodar `pnpm --filter @kpmg/shared build` (ou `dev` em watch) antes de
-> subir api/web. Tailwind v4 via `@tailwindcss/vite`; tokens de
-> `docs/design.md` ainda não aplicados (tarefa de frontend).
+> Nota: `apps/api` consome `@kpmg/shared` via build (`dist/`) — rodar
+> `pnpm --filter @kpmg/shared build` antes de subir a API. O frontend usa
+> o fonte direto, via alias no `vite.config.ts` (ver `09-DECISIONS.md`),
+> e não precisa do build.
+>
+> Pendências do bootstrap, ainda abertas: `prisma init` não foi rodado
+> (não existe `apps/api/prisma/schema.prisma`), `@nestjs/swagger` não foi
+> instalado, e as pastas `src/modules/company/`, `src/email/` e
+> `src/common/filters/` ainda não existem.
 
 ## Backend
 
 - [ ] `todo` — Schema Prisma: Company (ver `docs/02-DATA-MODEL.md`)
-- [ ] `todo` — Schemas Zod compartilhados: Company, Address, Cnpj
-- [ ] `todo` — CnpjValidator + testes unitários
+- [x] `done` — Schemas Zod compartilhados: Company, Address, Cnpj
+- [x] `done` — CnpjValidator + testes unitários (11 casos, `pnpm --filter @kpmg/shared test`)
 - [ ] `todo` — CRUD Company (controller + service + DTOs via nestjs-zod)
+- [ ] `todo` — `GET /companies` com `search` e `state` (ver `docs/03-API-SPEC.md`)
 - [ ] `todo` — EmailService (Resend) + implementação mock para testes
 - [ ] `todo` — Testes e2e do CRUD (supertest)
 - [ ] `todo` — Teste e2e confirmando ausência de autenticação
@@ -39,12 +45,17 @@
 
 ## Frontend
 
-- [ ] `todo` — Design tokens Tailwind a partir de `docs/design.md`
-- [ ] `todo` — `CompanyListPage`
-- [ ] `todo` — `CompanyFormPage` (create + edit)
-- [ ] `todo` — Hook `useCepLookup` (ViaCEP + fallback)
-- [ ] `todo` — Client HTTP para a API
-- [ ] `todo` — Toasts, modal de confirmação, empty state
+- [x] `done` — Design tokens Tailwind a partir de `docs/design.md`
+- [x] `done` — `CompanyListPage`
+- [x] `done` — `CompanyFormPage` (create + edit)
+- [x] `done` — Hook `useCepLookup` (ViaCEP + fallback)
+- [x] `done` — Client HTTP para a API
+- [x] `done` — Toasts, modal de confirmação, empty state
+
+> Nota: as telas seguem o protótipo do Claude Design
+> (`KPMG Technical Design Implementation/`). Enquanto a API não existe,
+> `VITE_API_MOCK=true` liga uma implementação em memória — ver
+> `docs/09-DECISIONS.md`. Trocar para a API real é só apagar a variável.
 
 ## Infra / Deploy
 

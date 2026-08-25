@@ -30,8 +30,14 @@ assíncrona após persistência bem-sucedida (ver `06-EMAIL-NOTIFICATIONS.md`).
 ### `GET /companies`
 Lista empresas cadastradas.
 
-- Query opcional: `?page=1&pageSize=10`
+- Query opcional: `?page=1&pageSize=10&search=aurora&state=SP`
+  - `search` — filtra por nome, nome fantasia ou CNPJ (com ou sem máscara).
+  - `state` — filtra pela UF do endereço (`address.state`).
+  - Filtros combinam entre si e valem sobre o conjunto inteiro, não sobre a
+    página corrente (por isso são do servidor, não do frontend — ver
+    `09-DECISIONS.md`).
 - 200: `{ data: Company[], total: number, page: number, pageSize: number }`
+  (`total` reflete os filtros aplicados)
 
 ### `GET /companies/:id`
 Busca uma empresa por id.

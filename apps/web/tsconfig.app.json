@@ -20,7 +20,12 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "erasableSyntaxOnly": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+
+    /* Mesmo alias do vite.config.ts: tipos vêm do fonte, não do dist/. */
+    "paths": {
+      "@kpmg/shared": ["../../packages/shared/src/index.ts"]
+    }
   },
   "include": ["src"]
 }

@@ -1,3 +1,80 @@
 @import "tailwindcss";
 
-/* Design tokens de docs/design.md entram aqui (tarefa "Design tokens Tailwind"). */
+/*
+  Tokens de docs/design.md. Os nomes seguem o documento — o Tailwind v4 deriva
+  as utilities deles (--color-primary vira bg-primary/text-primary, --radius-card
+  vira rounded-card, e assim por diante).
+*/
+@theme {
+  --font-sans: "Public Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  --color-primary: #00338d;
+  --color-primary-dark: #00205b;
+  --color-accent: #00a3e0;
+
+  /* Derivados do acento — superfícies e hovers usados no protótipo. */
+  --color-accent-surface: #e5f6fd;
+  --color-accent-subtle: #eff7fc;
+  --color-accent-border: #bfe7f7;
+
+  --color-bg: #ffffff;
+  --color-bg-subtle: #f5f7fa;
+  --color-bg-zebra: #fafbfd;
+  --color-border: #d0d7e2;
+  --color-border-subtle: #edf1f6;
+
+  --color-text: #1a1a1a;
+  --color-text-muted: #4a5568;
+  --color-text-faint: #8794a8;
+
+  --color-success: #2e9e5b;
+  --color-error: #d64545;
+  --color-error-dark: #b93a3a;
+  --color-info: #2e7dd1;
+  --color-warning: #d19a2e;
+
+  --text-h1: 40px;
+  --text-h1--line-height: 48px;
+  --text-h2: 28px;
+  --text-h2--line-height: 36px;
+  --text-h3: 20px;
+  --text-h3--line-height: 28px;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-small: 14px;
+  --text-small--line-height: 20px;
+  --text-caption: 12px;
+  --text-caption--line-height: 16px;
+
+  --radius-input: 8px;
+  --radius-card: 12px;
+  --radius-pill: 999px;
+
+  --shadow-elevation-1: 0 1px 2px rgba(16, 24, 40, 0.05);
+  --shadow-elevation-2: 0 4px 6px rgba(16, 24, 40, 0.08);
+  --shadow-elevation-3: 0 8px 16px rgba(16, 24, 40, 0.1);
+  --shadow-elevation-4: 0 16px 32px rgba(16, 24, 40, 0.12);
+
+  --animate-toast-in: toast-in 180ms ease-out;
+
+  @keyframes toast-in {
+    from {
+      opacity: 0;
+      transform: translateX(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+}
+
+@layer base {
+  body {
+    margin: 0;
+    background-color: var(--color-bg-subtle);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+}
