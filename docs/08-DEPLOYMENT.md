@@ -48,6 +48,13 @@ Pipeline dispara em push para `main` (`.github/workflows/ci.yml`):
    de migration aborta o release com produção intacta. Nunca
    `migrate dev`.
 
+7. **Smoke test pós-deploy** contra `kpmg.devarthur.com.br`: `/health`,
+   `/companies` e `/audit-logs`. O release já espera o healthcheck do
+   container, mas o smoke prova o caminho externo inteiro — Cloudflare
+   Tunnel, Caddy, Postgres e Mongo. O `/audit-logs` é o sinal mais
+   informativo: sem MongoDB conectado o `AuditLogService` devolve 503,
+   então 200 ali é prova de que a trilha está de pé em produção.
+
 Frontend: pipeline nativo da Vercel (deploy automático por push/PR),
 sem necessidade de step manual no GitHub Actions. Build configurado no
 repositório via `vercel.json`.
