@@ -68,17 +68,18 @@
 
 ## Infra / Deploy
 
-- [~] `in-progress` — CI (GitHub Actions: lint + testes + build + push imagem)
-- [ ] `todo` — Deploy backend na VPS (Docker + Caddy + Cloudflare Tunnel)
-- [ ] `todo` — Deploy frontend na Vercel
-- [ ] `todo` — CORS configurado entre os dois domínios
-- [ ] `todo` — `prisma migrate deploy` automatizado no CI
-- [ ] `todo` — Seed de produção
+- [x] `done` — CI (lint + testes + build) + release na VPS (push imagem GHCR + deploy via deployctl)
+- [x] `done` — Deploy backend na VPS (modelo vps-infra: `kpmg-api` + `kpmg-postgres` + job `migrate`)
+- [x] `done` — Deploy frontend na Vercel
+- [x] `done` — CORS configurado entre os dois domínios
+- [x] `done` — `prisma migrate deploy` automatizado (job `migrate` antes de cada swap)
+- [x] `done` — Seed de produção (4 empresas; script reprodutível em `apps/api/prisma/seed.js`)
 
-> CI criado em `.github/workflows/ci.yml` cobrindo lint, typecheck,
-> testes unitários (shared + api), e2e contra Postgres service container
-> e build dos dois apps, em push/PR para `main`. Faltam: build/push da
-> imagem Docker no GHCR e deploy via SSH (dependem de secrets da VPS).
+> **Produção no ar**: frontend em `https://kpmg-test-frontend.vercel.app`,
+> backend em `https://kpmg.devarthur.com.br` (Swagger em `/docs`).
+> Deploys automáticos a cada merge na `main` (job `release` do CI).
+> Pendente apenas: `RESEND_API_KEY` real no `secrets.env` da VPS (sem
+> ela o envio de e-mail é pulado com log, sem quebrar o cadastro).
 
 ## Documentação
 
