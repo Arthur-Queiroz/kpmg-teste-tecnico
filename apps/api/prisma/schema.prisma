@@ -1,0 +1,23 @@
+// Data model: docs/02-DATA-MODEL.md
+// Address is a nested Zod object persisted as Json — see docs/09-DECISIONS.md.
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Company {
+  id        String   @id @default(uuid())
+  name      String
+  cnpj      String   @unique
+  tradeName String
+  address   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("companies")
+}

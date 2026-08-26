@@ -29,6 +29,7 @@ duplicação e divergência entre os dois.
 | `docs/10-CONVENTIONS.md` | Nomenclatura — **leitura obrigatória antes de nomear qualquer coisa** |
 | `docs/CONSTRAINTS.md` | O que NÃO implementar (autenticação) |
 | `docs/design.md` | Tokens visuais para o frontend |
+| `docs/status/` | O que já está implementado e verificado (fotografia atual) |
 
 ## Stack (resumo — detalhes nos docs acima)
 

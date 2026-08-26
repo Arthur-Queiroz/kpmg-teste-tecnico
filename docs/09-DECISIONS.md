@@ -135,3 +135,28 @@ com fallback manual robusto para CEP não encontrado ou API fora do ar
 — nunca bloqueia o cadastro. Chamado direto do browser (sem proxy pelo
 backend) por ser uma API pública, sem necessidade de segredo, e para
 não adicionar latência desnecessária ao fluxo.
+
+## Prisma 6 fixado (não 7)
+
+O Prisma 7 remove o generator `prisma-client-js` que
+`docs/02-DATA-MODEL.md` documenta e passa a exigir `prisma.config.ts` +
+driver adapters (cliente sem engine Rust). Fixado em `prisma@6` /
+`@prisma/client@6` para manter o setup documentado e a integração
+CommonJS direta com o NestJS, sem configuração extra.
+
+## nestjs-zod 5: `cleanupOpenApiDoc` no lugar de `patchNestJsSwagger`
+
+O nestjs-zod 5 removeu `patchNestJsSwagger()`: os DTOs criados com
+`createZodDto()` já carregam os metadados de schema que o
+`SwaggerModule.createDocument()` consome nativamente. Resta apenas
+`cleanupOpenApiDoc(document)` antes do `SwaggerModule.setup()` para
+limpar artefatos internos do documento OpenAPI.
+
+## Postgres local na porta 5433 do host
+
+A 5432 do host já era ocupada por outro container Docker da máquina de
+desenvolvimento (projeto `fut-app`), o que causava falha de autenticação
+ao conectar (a requisição caía no banco errado). O `docker-compose.yml`
+deste projeto publica `5433:5432`; em produção o backend conecta na
+instância compartilhada da VPS pela rede Docker interna, sem porta de
+host envolvida.
