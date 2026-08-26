@@ -1,0 +1,7 @@
+.git
+**/node_modules
+**/dist
+coverage
+docs
+"KPMG Technical Design Implementation"
+*.log
