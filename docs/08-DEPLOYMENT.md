@@ -8,10 +8,12 @@
   em `kpmg.devarthur.com.br`. O deploy segue o modelo vps-infra
   (manifesto `apps/kpmg.yaml` no repo vps-infra, releases por digest via
   `deployctl`).
-- **Banco de dados**: Postgres 16 **dedicado ao app** (serviço
-  `stateful` do manifesto, container `kpmg-postgres` na rede interna
-  `net-kpmg`, volume em `/var/lib/vps-apps/kpmg/pgdata`). Não é exposto
-  publicamente: só acessível pelo backend, na rede interna do app.
+- **Bancos de dados**: Postgres 16 (domínio: empresas) e MongoDB 7
+  (log de auditoria das escritas), ambos serviços `stateful`
+  **dedicados ao app** (containers `kpmg-postgres`/`kpmg-mongo` na rede
+  interna `net-kpmg`, volumes em `/var/lib/vps-apps/kpmg/`). Não são
+  expostos publicamente: só acessíveis pelo backend, na rede interna do
+  app.
   (O planejamento original previa um database na instância Postgres
   compartilhada da VPS — a mudança está justificada em
   `09-DECISIONS.md`.)
@@ -46,6 +48,13 @@ Pipeline dispara em push para `main` (`.github/workflows/ci.yml`):
    de migration aborta o release com produção intacta. Nunca
    `migrate dev`.
 
+7. **Smoke test pós-deploy** contra `kpmg.devarthur.com.br`: `/health`,
+   `/companies` e `/audit-logs`. O release já espera o healthcheck do
+   container, mas o smoke prova o caminho externo inteiro — Cloudflare
+   Tunnel, Caddy, Postgres e Mongo. O `/audit-logs` é o sinal mais
+   informativo: sem MongoDB conectado o `AuditLogService` devolve 503,
+   então 200 ali é prova de que a trilha está de pé em produção.
+
 Frontend: pipeline nativo da Vercel (deploy automático por push/PR),
 sem necessidade de step manual no GitHub Actions. Build configurado no
 repositório via `vercel.json`.
@@ -74,7 +83,8 @@ novo deploy para ter efeito, não basta reiniciar.
 
 | Variável | Onde | Exemplo |
 |---|---|---|
-| `DATABASE_URL` | VPS (backend) | `postgresql://user:pass@localhost:5432/kpmg_teste` |
+| `DATABASE_URL` | VPS (backend) | `postgresql://user:pass@kpmg-postgres:5432/kpmg_teste` |
+| `MONGO_URL` | VPS (backend) | `mongodb://user:pass@kpmg-mongo:27017/kpmg_logs?authSource=admin` |
 | `RESEND_API_KEY` | VPS (backend) | — |
 | `NOTIFICATION_EMAILS` | VPS (backend) | `email1@x.com,email2@x.com` |
 | `CORS_ORIGIN` | VPS (backend) | URL do deploy Vercel |

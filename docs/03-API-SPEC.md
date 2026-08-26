@@ -66,6 +66,26 @@ Health check simples, sem lógica de negócio — usado para monitoramento
 
 - 200: `{ status: "ok", timestamp: string }`
 
+### `GET /audit-logs`
+Lista a trilha de auditoria das operações de escrita em empresas
+(`created`, `updated`, `deleted`), persistida no **MongoDB** (ver
+`09-DECISIONS.md` — persistência poliglota). A escrita do log é
+best-effort: uma falha do MongoDB nunca afeta o CRUD.
+
+- Query opcional: `?page=1&pageSize=10&action=created`
+- 200: `{ data: AuditLog[], total: number, page: number, pageSize: number }`
+
+```json
+{
+  "action": "created",
+  "companyId": "b3f1c2d4-0000-4000-8000-000000000001",
+  "companyName": "Aurora Tecnologia Ltda",
+  "cnpj": "12345678000195",
+  "details": { "tradeName": "Aurora Tech" },
+  "createdAt": "2026-08-26T12:00:00.000Z"
+}
+```
+
 ## Formato de erro padrão
 
 Todo erro passa por um `HttpExceptionFilter` global, garantindo formato

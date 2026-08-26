@@ -78,6 +78,39 @@ package.json, não como binário de `node_modules/.bin`.
 **Correção**: `pnpm --filter api exec prisma generate` e
 `pnpm --filter api exec prisma migrate deploy` no workflow.
 
+## 9. Jest: handshake do MongoDB rejeitado por metadata vazio
+
+**Sintoma**: `MongoServerError: Missing required sub-document 'driver' in
+the client metadata document`. Só sob Jest — no mesmo runner, um
+`node -e` com a mesma URL e as mesmas credenciais conectava normalmente.
+Os e2e falhavam antes disso, no `beforeAll`, com "Exceeded timeout of
+5000 ms for a hook": o boot do `AppModule` ficava preso na conexão.
+
+**Causa**: o driver 7.x carrega o módulo `os` por `import()` dinâmico
+(`resolveRuntimeAdapters`). O Jest em CJS, sem
+`--experimental-vm-modules`, não resolve import dinâmico dentro do seu
+VM context — a promise rejeita com "A dynamic import callback was
+invoked without --experimental-vm-modules", o `makeClientMetadata`
+devolve `{}`, e o servidor recusa um handshake sem o sub-documento
+`driver`. Não tinha relação com rede, credencial ou service container,
+que era onde a investigação estava concentrada.
+
+**Como foi isolado sem infraestrutura**: o defeito está no documento que
+o driver *monta*, não no transporte. Um spec que só instancia o
+`MongoClient` e inspeciona `client.options.metadata` — sem `connect()`,
+sem servidor — mostra `{}` sob Jest e o documento completo em node puro.
+Diagnóstico local, sem depender de Mongo no CI.
+
+**Correção**: injetar o adapter explicitamente —
+`new MongoClient(url, { runtimeAdapters: { os } })`. É opção pública do
+driver, elimina o `import()` dinâmico e deixa o handshake idêntico em
+teste e em produção.
+
+**Lição**: quando algo funciona em `node` e falha sob Jest, suspeite do
+carregamento de módulos antes de suspeitar do ambiente. E prefira
+reproduzir o artefato que o código produz a reproduzir a integração
+inteira.
+
 ## O que **não** é problema (verificado)
 
 - `pnpm test` na raiz: o pnpm ignora automaticamente pacotes sem script

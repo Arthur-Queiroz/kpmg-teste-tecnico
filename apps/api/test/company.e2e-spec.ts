@@ -312,4 +312,41 @@ describe('Company (e2e)', () => {
       await http().post('/companies').send(auroraCompany).expect(201);
     });
   });
+
+  describe('GET /audit-logs (trilha no MongoDB)', () => {
+    it('records created, updated and deleted events for a company', async () => {
+      const created = await createCompany(auroraCompany);
+      await http()
+        .patch(`/companies/${created.id}`)
+        .send({ tradeName: 'Aurora' })
+        .expect(200);
+      await http().delete(`/companies/${created.id}`).expect(204);
+
+      // Audit writes are fire-and-forget — give the inserts a moment.
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const body = bodyAs<{
+        data: Array<{ action: string; companyId: string }>;
+        total: number;
+      }>(await http().get('/audit-logs?pageSize=100').expect(200));
+
+      const actionsOfCompany = body.data
+        .filter((entry) => entry.companyId === created.id)
+        .map((entry) => entry.action);
+      expect(actionsOfCompany).toEqual(
+        expect.arrayContaining(['created', 'updated', 'deleted']),
+      );
+    });
+
+    it('filters by action', async () => {
+      await createCompany(auroraCompany);
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      const body = bodyAs<{ data: Array<{ action: string }> }>(
+        await http().get('/audit-logs?action=deleted').expect(200),
+      );
+
+      expect(body.data.every((entry) => entry.action === 'deleted')).toBe(true);
+    });
+  });
 });

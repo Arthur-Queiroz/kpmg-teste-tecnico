@@ -30,6 +30,8 @@
 
 ## Backend
 
+- [ ] `todo` — Log de auditoria em MongoDB (eventos de escrita do CRUD + `GET /audit-logs`)
+
 - [x] `done` — Schema Prisma: Company (migration `init` aplicada, tabela `companies`)
 - [x] `done` — Schemas Zod compartilhados: Company, Address, Cnpj
 - [x] `done` — CnpjValidator + testes unitários (11 casos, `pnpm --filter @kpmg/shared test`)

@@ -32,6 +32,21 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      # MongoDB dos testes e2e do audit log (apps/api/.env.test aponta para
+      # localhost:27017 — mesmas credenciais do compose local).
+      mongo:
+        image: mongo:7
+        env:
+          MONGO_INITDB_ROOT_USERNAME: kpmg
+          MONGO_INITDB_ROOT_PASSWORD: kpmg
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 
@@ -97,3 +112,53 @@ jobs:
     secrets:
       DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
       VPS_HOST: ${{ secrets.VPS_HOST }}
+
+  # Verificação pós-deploy contra o domínio real. O release já espera o
+  # healthcheck do container passar, mas isso prova o caminho inteiro —
+  # Cloudflare Tunnel, Caddy, Postgres e Mongo — do lado de fora.
+  smoke:
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Smoke test em produção
+        env:
+          BASE_URL: https://kpmg.devarthur.com.br
+        run: |
+          set -euo pipefail
+
+          # O swap já aconteceu, mas a borda pode levar alguns segundos para
+          # apontar para o container novo.
+          status=000
+          for attempt in $(seq 1 10); do
+            status=$(curl -sS -o /tmp/health.json -w '%{http_code}' "$BASE_URL/health" || echo 000)
+            [ "$status" = "200" ] && break
+            echo "tentativa $attempt: /health respondeu $status"
+            sleep 6
+          done
+          if [ "$status" != "200" ]; then
+            echo "::error::/health não respondeu 200 (último: $status)"
+            cat /tmp/health.json 2>/dev/null || true
+            exit 1
+          fi
+          grep -q '"status":"ok"' /tmp/health.json || {
+            echo "::error::/health respondeu 200 mas sem status ok"; cat /tmp/health.json; exit 1; }
+
+          # CRUD no ar: envelope de paginação vindo do Postgres.
+          status=$(curl -sS -o /tmp/companies.json -w '%{http_code}' "$BASE_URL/companies?pageSize=1")
+          if [ "$status" != "200" ]; then
+            echo "::error::/companies respondeu $status"; cat /tmp/companies.json; exit 1
+          fi
+          grep -q '"total"' /tmp/companies.json || {
+            echo "::error::/companies sem envelope de paginação"; cat /tmp/companies.json; exit 1; }
+
+          # 200 aqui só é possível com o Mongo conectado: sem ele o
+          # AuditLogService devolve 503 (audit-log.service.ts).
+          status=$(curl -sS -o /tmp/audit.json -w '%{http_code}' "$BASE_URL/audit-logs?pageSize=1")
+          if [ "$status" != "200" ]; then
+            echo "::error::/audit-logs respondeu $status — MongoDB provavelmente fora do ar"
+            cat /tmp/audit.json 2>/dev/null || true
+            exit 1
+          fi
+
+          echo "smoke ok: health, companies e audit-logs respondendo em produção"

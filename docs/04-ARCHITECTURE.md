@@ -68,4 +68,11 @@ funcionalidade.
 | Frontend (Vercel) | Backend (VPS) | HTTPS/REST | Não (por requisito do PDF) |
 | Frontend (Vercel) | ViaCEP | HTTPS/REST | Não (API pública) |
 | Backend (VPS) | Postgres (VPS) | TCP interno | Sim (credenciais de conexão) |
+| Backend (VPS) | MongoDB (VPS) | TCP interno | Sim (credenciais de conexão) |
 | Backend (VPS) | Resend | HTTPS/REST | Sim (API key) |
+
+O Postgres guarda o domínio (empresas); o MongoDB guarda a trilha de
+auditoria das escritas (eventos `created`/`updated`/`deleted`), ambos na
+rede interna do app (`net-kpmg`). O log é best-effort como o e-mail:
+falha do MongoDB é logada e nunca derruba o CRUD (ver
+`09-DECISIONS.md`).
