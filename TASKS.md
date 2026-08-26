@@ -84,4 +84,4 @@
 
 - [x] `done` — Todos os docs de planejamento (`docs/*.md`)
 - [x] `done` — `docs/status/` (o que está pronto + lições da suíte de testes)
-- [ ] `todo` — `README.md` raiz (setup local, links de deploy/Swagger, badge de CI)
+- [x] `done` — `README.md` raiz (setup local, links de deploy/Swagger, badge de CI)
