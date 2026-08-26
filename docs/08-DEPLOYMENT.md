@@ -50,6 +50,26 @@ Frontend: pipeline nativo da Vercel (deploy automático por push/PR),
 sem necessidade de step manual no GitHub Actions. Build configurado no
 repositório via `vercel.json`.
 
+## Configuração da Vercel
+
+Fica versionada em `vercel.json`, na raiz — não no dashboard — para que
+o build seja reproduzível e revisável junto do código:
+
+| Campo | Valor | Por quê |
+|---|---|---|
+| `installCommand` | `pnpm install --frozen-lockfile` | Mesma instalação do CI, workspace inteiro |
+| `buildCommand` | `pnpm --filter web build` | O `apps/web` importa `packages/shared` pelo fonte, então o build precisa rodar da raiz do workspace |
+| `outputDirectory` | `apps/web/dist` | Saída do Vite |
+| `rewrites` | tudo → `/index.html` | Sem isso, um F5 em `/companies/new` ou `/companies/:id/edit` devolve 404: as rotas existem só no React Router, não como arquivos |
+
+Por isso o **Root Directory do projeto na Vercel deve continuar sendo a
+raiz do repositório** (`.`), e não `apps/web` — os comandos acima já
+apontam para o app certo, e a raiz é onde vivem o `pnpm-workspace.yaml`
+e o `packages/shared`.
+
+`VITE_API_URL` é **build-time**: mudar a variável na Vercel exige um
+novo deploy para ter efeito, não basta reiniciar.
+
 ## Variáveis de ambiente
 
 | Variável | Onde | Exemplo |
