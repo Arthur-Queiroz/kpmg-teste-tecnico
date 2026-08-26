@@ -188,3 +188,30 @@ mesma imagem do release antes do swap do serviço `api` (`runBefore`).
 Uma migration que falha aborta o release com produção intacta — no
 modelo entrypoint, o container novo subiria quebrado até o healthcheck
 derrubá-lo.
+
+## Persistência poliglota: MongoDB para log de auditoria
+
+O projeto usa dois bancos, cada um no que faz melhor — decisão deliberada
+para demonstrar o raciocínio de "quando usar NoSQL":
+
+- **Postgres (relacional)** para o domínio: empresas são dados
+  estruturados, com integridade (CNPJ único), schema estável e consultas
+  com filtros combinados (`search` + `state` + paginação). Território
+  natural de SQL.
+- **MongoDB (documentos)** para o log de auditoria: eventos de
+  `created`/`updated`/`deleted` são **append-only, alto volume e de
+  esquema variável** (o payload de um update carrega os campos
+  alterados; o de um create, a empresa inteira). Não há JOIN nem
+  integridade referencial envolvida, e a escrita precisa ser barata e
+  nunca acoplada à transação do domínio. Forçar isso em SQL significaria
+  ou uma tabela com colunas genéricas/`JSONB` mal aproveitada, ou schema
+  rígido que muda a cada novo tipo de evento.
+
+Garantias arquiteturais mantidas:
+
+- a escrita do log é **best-effort** (como o e-mail): falha do MongoDB é
+  logada, nunca derruba o CRUD — o dado importante continua no Postgres;
+- o MongoDB nunca é fonte de verdade de negócio — é uma trilha
+  reconstruível e dispensável;
+- exposto para avaliação via `GET /audit-logs` (público, paginado, como
+  o resto da API — ver `CONSTRAINTS.md`).

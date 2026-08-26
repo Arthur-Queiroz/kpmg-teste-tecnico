@@ -32,6 +32,21 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      # MongoDB dos testes e2e do audit log (apps/api/.env.test aponta para
+      # localhost:27017 — mesmas credenciais do compose local).
+      mongo:
+        image: mongo:7
+        env:
+          MONGO_INITDB_ROOT_USERNAME: kpmg
+          MONGO_INITDB_ROOT_PASSWORD: kpmg
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --quiet --eval 'db.adminCommand({ping: 1})'"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - uses: actions/checkout@v4
 

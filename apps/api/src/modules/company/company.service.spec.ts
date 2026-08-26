@@ -4,6 +4,7 @@ import { Prisma } from '@prisma/client';
 import type { Company, CompanyRecord } from '@kpmg/shared';
 
 import type { PrismaService } from '../../prisma/prisma.service';
+import type { AuditLogService } from '../audit-log/audit-log.service';
 
 import { CompanyService } from './company.service';
 
@@ -54,6 +55,7 @@ function buildPrismaMock() {
 describe('CompanyService', () => {
   let prisma: ReturnType<typeof buildPrismaMock>;
   let emailService: { sendCompanyCreatedNotification: jest.Mock };
+  let auditLogService: { record: jest.Mock };
   let service: CompanyService;
 
   beforeEach(() => {
@@ -61,9 +63,11 @@ describe('CompanyService', () => {
     emailService = {
       sendCompanyCreatedNotification: jest.fn().mockResolvedValue(undefined),
     };
+    auditLogService = { record: jest.fn().mockResolvedValue(undefined) };
     service = new CompanyService(
       prisma as unknown as PrismaService,
       emailService,
+      auditLogService as unknown as AuditLogService,
     );
   });
 
@@ -83,6 +87,13 @@ describe('CompanyService', () => {
       );
       expect(emailService.sendCompanyCreatedNotification).toHaveBeenCalledWith(
         companyRecord,
+      );
+      expect(auditLogService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'created',
+          companyId: companyRecord.id,
+          cnpj: companyRecord.cnpj,
+        }),
       );
     });
 
@@ -177,6 +188,13 @@ describe('CompanyService', () => {
       expect(
         emailService.sendCompanyCreatedNotification,
       ).not.toHaveBeenCalled();
+      expect(auditLogService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'updated',
+          companyId: companyRecord.id,
+          details: { changedFields: ['tradeName'] },
+        }),
+      );
     });
 
     it('throws 404 when the company does not exist', async () => {
@@ -197,6 +215,12 @@ describe('CompanyService', () => {
       expect(prisma.company.delete).toHaveBeenCalledWith({
         where: { id: companyRecord.id },
       });
+      expect(auditLogService.record).toHaveBeenCalledWith(
+        expect.objectContaining({
+          action: 'deleted',
+          companyId: companyRecord.id,
+        }),
+      );
     });
 
     it('throws 404 when the company does not exist', async () => {

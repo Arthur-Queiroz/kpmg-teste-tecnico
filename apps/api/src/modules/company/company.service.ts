@@ -12,6 +12,8 @@ import type { Address, Company, CompanyRecord } from '@kpmg/shared';
 
 import { EmailService } from '../../email/email.service';
 import { PrismaService } from '../../prisma/prisma.service';
+import { AuditLogService } from '../audit-log/audit-log.service';
+import type { AuditLogEntry } from '../audit-log/audit-log.types';
 
 import type { ListCompaniesQueryDto } from './dto/list-companies-query.dto';
 import type { UpdateCompanyDto } from './dto/update-company.dto';
@@ -31,6 +33,7 @@ export class CompanyService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly emailService: EmailService,
+    private readonly auditLogService: AuditLogService,
   ) {}
 
   async create(input: Company): Promise<CompanyRecord> {
@@ -55,6 +58,14 @@ export class CompanyService {
             error instanceof Error ? error.stack : String(error),
           );
         });
+
+      this.recordAudit({
+        action: 'created',
+        companyId: company.id,
+        companyName: company.name,
+        cnpj: company.cnpj,
+        details: toCompanyRecord(company),
+      });
 
       return toCompanyRecord(company);
     } catch (error) {
@@ -101,6 +112,15 @@ export class CompanyService {
           ...(address ? { address: address } : {}),
         },
       });
+
+      this.recordAudit({
+        action: 'updated',
+        companyId: company.id,
+        companyName: company.name,
+        cnpj: company.cnpj,
+        details: { changedFields: Object.keys(input) },
+      });
+
       return toCompanyRecord(company);
     } catch (error) {
       throwConflictOnDuplicateCnpj(error);
@@ -109,8 +129,29 @@ export class CompanyService {
   }
 
   async remove(id: string): Promise<void> {
-    await this.findOne(id);
+    const company = await this.findOne(id);
     await this.prisma.company.delete({ where: { id } });
+
+    this.recordAudit({
+      action: 'deleted',
+      companyId: company.id,
+      companyName: company.name,
+      cnpj: company.cnpj,
+    });
+  }
+
+  /**
+   * Audit trail writes are best-effort (docs/09-DECISIONS.md): a MongoDB
+   * failure is logged, never propagated — the CRUD never breaks because of
+   * the log.
+   */
+  private recordAudit(entry: AuditLogEntry): void {
+    this.auditLogService.record(entry).catch((error: unknown) => {
+      this.logger.error(
+        `Failed to write audit log for company ${entry.companyId}`,
+        error instanceof Error ? error.stack : String(error),
+      );
+    });
   }
 }
 
