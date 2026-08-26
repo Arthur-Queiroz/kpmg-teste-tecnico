@@ -13,10 +13,13 @@ React Router + React Hook Form + Zod (via `packages/shared`).
 
 ## `CompanyListPage`
 
-- Hero azul (`--color-primary`) com título "Empresas" + CTA pill branco
-  "Cadastrar Nova Empresa" → navega para `/companies/new`.
+- ~~Hero azul (`--color-primary`) com título "Empresas" + CTA pill
+  branco~~ — **superado**: o protótipo do Claude Design, feito depois
+  deste rascunho, chegou a um cabeçalho de página sobre fundo claro com
+  CTA azul, e foi ele que prevaleceu na implementação (o porquê está em
+  `09-DECISIONS.md`). O CTA "Nova Empresa" navega para `/companies/new`.
 - Tabela/cards com acento lateral (`--color-accent`), colunas:
-  `Nome | CNPJ | Nome Fantasia | Cidade | Criado em | Ações`.
+  `Nome | CNPJ | Nome Fantasia | Cidade | Criado em | Alterado em | Ações`.
   (`Cidade` vem de `company.address.city`, achatada só aqui por
   legibilidade — o restante do endereço só aparece no formulário.)
 - Ações por linha: editar, excluir (excluir abre modal de confirmação).

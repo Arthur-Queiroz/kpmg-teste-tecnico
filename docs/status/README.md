@@ -83,7 +83,7 @@ Problemas encontrados ao montar a suíte e2e e como foram resolvidos:
 ```bash
 docker compose up -d                          # Postgres local (porta 5433 do host)
 pnpm --filter @kpmg/shared build              # api consome o dist/
-pnpm --filter api prisma migrate dev          # cria/atualiza a tabela
+pnpm --filter api exec prisma migrate dev          # cria/atualiza a tabela
 pnpm --filter api dev                         # API em localhost:3000
 pnpm --filter web dev                         # frontend em localhost:5173
 ```

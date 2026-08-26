@@ -97,7 +97,7 @@ commitar `.env` com valores reais.
 ## Backup
 
 Sem rotina de backup dedicada para este banco — decisão consciente,
-dado que é dado reprodutível via seed (`prisma/seed.ts`), sem valor de
+dado que é dado reprodutível via seed (`prisma/seed.js`), sem valor de
 negócio real após a avaliação. Documentado aqui para deixar claro que
 não é uma lacuna esquecida.
 
@@ -107,11 +107,15 @@ não é uma lacuna esquecida.
 para possível monitoramento futuro via Uptime Kuma (já em uso na VPS
 para outros serviços do autor).
 
-## Checklist de deploy (para o agente que for executar)
+## Checklist de deploy — concluído
 
-- [ ] Criar `kpmg_teste` database na instância Postgres existente da VPS.
-- [ ] Configurar rota Cloudflare Tunnel + Caddy para `kpmg.devarthur.com.br`.
-- [ ] Criar secrets no GitHub Actions (SSH key, `RESEND_API_KEY`, etc.).
-- [ ] Configurar variáveis de ambiente de build na Vercel.
-- [ ] Validar CORS entre os dois domínios após primeiro deploy.
-- [ ] Rodar seed em produção para o avaliador não ver lista vazia.
+- [x] Banco `kpmg_teste` criado (container `kpmg-postgres`, rede `net-kpmg`).
+- [x] Rota Cloudflare Tunnel + Caddy para `kpmg.devarthur.com.br`.
+- [x] Secrets no GitHub Actions (`DEPLOY_SSH_KEY`, `VPS_HOST`) e no
+      `secrets.env` da VPS (`DATABASE_URL`, `MONGO_URL`, `RESEND_API_KEY`,
+      senhas dos bancos).
+- [x] Variáveis de build na Vercel (`VITE_API_URL`).
+- [x] CORS validado entre os dois domínios (`CORS_ORIGIN` no manifesto).
+- [x] Seed de produção aplicado.
+- [x] MongoDB stateful (`kpmg-mongo`) para a trilha de auditoria.
+- [x] Smoke test pós-deploy no pipeline (`/health`, `/companies`, `/audit-logs`).

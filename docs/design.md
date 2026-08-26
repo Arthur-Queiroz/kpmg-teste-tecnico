@@ -106,8 +106,10 @@ do envio de e-mail.
 
 ## Aplicação nas telas
 
-- **Listagem**: hero azul com título "Empresas" + CTA pill branco,
-  busca opcional, cards com acento lateral, paginação.
+- **Listagem**: ~~hero azul com título "Empresas" + CTA pill branco~~ —
+  **superado** pelo protótipo (ver `09-DECISIONS.md`): cabeçalho de
+  página sobre fundo claro, com CTA azul. Busca, filtro por UF, tabela
+  com acento lateral e paginação, como previsto aqui.
 - **Cadastro/Edição**: formulário em fundo branco, dois blocos visuais
   separados — "Dados da Empresa" e "Endereço" (reforça a modelagem em
   dois objetos no Zod).

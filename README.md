@@ -36,7 +36,7 @@ docker compose up -d                      # Postgres local (porta 5433 do host)
 
 cp apps/api/.env.example apps/api/.env    # valores de dev já preenchidos
 pnpm --filter @kpmg/shared build          # a api consome o dist/ do shared
-pnpm --filter api prisma migrate dev      # cria a tabela companies
+pnpm --filter api exec prisma migrate dev      # cria a tabela companies
 
 pnpm --filter api dev                     # backend em localhost:3000 (Swagger em /docs)
 pnpm --filter web dev                     # frontend em localhost:5173
@@ -45,9 +45,9 @@ pnpm --filter web dev                     # frontend em localhost:5173
 ## Testes
 
 ```bash
-pnpm --filter @kpmg/shared test           # 11 testes do validador de CNPJ
-pnpm --filter api test                    # 10 unitários (CompanyService, mocks)
-pnpm --filter api test:e2e                # 16 e2e (CRUD + prova sem auth)
+pnpm --filter @kpmg/shared test           # 17: validador de CNPJ + schemas Zod
+pnpm --filter api test                    # 15 unitários (Company e AuditLog, mocks)
+pnpm --filter api test:e2e                # 18 e2e (CRUD + prova sem auth + auditoria)
 ```
 
 Os e2e rodam contra um Postgres real isolado (`kpmg_teste_test`, criado
@@ -58,7 +58,7 @@ cadastro (via mock) e a prova deliberada de ausência de autenticação.
 
 ## CI/CD
 
-Push/PR na `main` roda lint, typecheck, os 37 testes e build dos dois
+Push/PR na `main` roda lint, typecheck, os 50 testes e build dos dois
 apps. Merge na `main` dispara o release: build+push da imagem no GHCR
 por digest e deploy na VPS via `deployctl` (modelo vps-infra), com
 `prisma migrate deploy` rodando como job antes de cada swap do container.

@@ -16,12 +16,14 @@ export const CnpjSchema = z
 export const CompanySchema = z.object({
   name: z
     .string()
+    .trim()
     .min(2, "Informe o nome (mínimo 2 caracteres).")
     .max(150, "Nome deve ter no máximo 150 caracteres.")
     .describe("Nome"),
   cnpj: CnpjSchema,
   tradeName: z
     .string()
+    .trim()
     .min(2, "Informe o nome fantasia.")
     .max(150, "Nome fantasia deve ter no máximo 150 caracteres.")
     .describe("Nome Fantasia"),

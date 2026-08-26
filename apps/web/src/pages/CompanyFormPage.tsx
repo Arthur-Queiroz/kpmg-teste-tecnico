@@ -160,7 +160,10 @@ export function CompanyFormPage() {
           showToast({
             kind: "success",
             title: "Empresa cadastrada",
-            text: "E-mail de notificação enviado ao responsável.",
+            // O envio é best-effort e assíncrono (docs/06-EMAIL-NOTIFICATIONS.md):
+            // o 201 confirma a persistência, nunca a entrega do e-mail. Afirmar
+            // "e-mail enviado" seria informação que a tela não tem como saber.
+            text: `${values.name} foi salva. A notificação por e-mail é disparada em segundo plano.`,
           });
         }
         navigate("/");

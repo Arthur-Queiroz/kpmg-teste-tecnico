@@ -47,12 +47,15 @@
 > Verificação manual fim-a-fim contra o Postgres local (curl em todos os
 > endpoints: 201/400/409/404/204, `?search=` com CNPJ mascarado, `?state=`,
 > Swagger em `/docs`, e-mail best-effort logado sem `RESEND_API_KEY`).
-> `VITE_API_MOCK` removido — o frontend roda contra a API real.
-> Unitários: 10 testes em `company.service.spec.ts` + 11 do CNPJ.
-> E2E: 16 testes em `apps/api/test/company.e2e-spec.ts` contra o banco
+> `VITE_API_MOCK` não é definida em nenhum ambiente — o frontend roda
+> contra a API real. O adapter mock segue no código, por trás da
+> interface `CompanyApi`, para desenvolver sem backend local.
+> Unitários: 15 testes (`company.service.spec.ts` + `audit-log.service.spec.ts`)
+> mais 11 do CNPJ em `packages/shared`.
+> E2E: 18 testes em `apps/api/test/company.e2e-spec.ts` contra o banco
 > isolado `kpmg_teste_test` (`.env.test` carregado via
 > `test/jest-e2e.setup.ts`; migrar com
-> `DATABASE_URL=...kpmg_teste_test pnpm --filter api prisma migrate deploy`).
+> `DATABASE_URL=...kpmg_teste_test pnpm --filter api exec prisma migrate deploy`).
 
 ## Frontend
 
@@ -65,8 +68,9 @@
 
 > Nota: as telas seguem o protótipo do Claude Design
 > (`KPMG Technical Design Implementation/`). O mock em memória
-> (`VITE_API_MOCK`, ver `docs/09-DECISIONS.md`) foi desligado quando a API
-> real entrou — as páginas seguem dependendo só da interface `CompanyApi`.
+> (`VITE_API_MOCK`, ver `docs/09-DECISIONS.md`) continua disponível para
+> desenvolvimento sem backend, mas não é ligado em nenhum ambiente — as
+> páginas dependem só da interface `CompanyApi`.
 
 ## Infra / Deploy
 
@@ -82,8 +86,10 @@
 > **Produção no ar**: frontend em `https://kpmg-test-frontend.vercel.app`,
 > backend em `https://kpmg.devarthur.com.br` (Swagger em `/docs`).
 > Deploys automáticos a cada merge na `main` (job `release` do CI).
-> Pendente apenas: `RESEND_API_KEY` real no `secrets.env` da VPS (sem
-> ela o envio de e-mail é pulado com log, sem quebrar o cadastro).
+> **E-mail operacional em produção**: `RESEND_API_KEY` configurada no
+> `secrets.env`, domínio remetente verificado (DKIM + SPF em
+> `mail.devarthur.com.br`) e envios confirmados como `delivered` no
+> painel do Resend. `NOTIFICATION_EMAILS` tem dois destinatários.
 
 ## Documentação
 

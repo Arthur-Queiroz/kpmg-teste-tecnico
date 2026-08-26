@@ -69,7 +69,7 @@ protótipo.
 ```bash
 pnpm install
 docker compose up -d          # sobe Postgres local
-pnpm --filter api prisma migrate dev
+pnpm --filter api exec prisma migrate dev
 pnpm --filter api dev         # backend em localhost:3000
 pnpm --filter web dev         # frontend em localhost:5173
 ```

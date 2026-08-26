@@ -157,9 +157,9 @@ limpar artefatos internos do documento OpenAPI.
 A 5432 do host já era ocupada por outro container Docker da máquina de
 desenvolvimento (projeto `fut-app`), o que causava falha de autenticação
 ao conectar (a requisição caía no banco errado). O `docker-compose.yml`
-deste projeto publica `5433:5432`; em produção o backend conecta na
-instância compartilhada da VPS pela rede Docker interna, sem porta de
-host envolvida.
+deste projeto publica `5433:5432`; em produção o backend conecta no
+container `kpmg-postgres` pela rede Docker interna `net-kpmg` (ver a
+decisão seguinte), sem porta de host envolvida.
 
 ## Postgres dedicado por app na VPS (não instância compartilhada)
 
