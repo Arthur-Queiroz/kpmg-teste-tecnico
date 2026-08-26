@@ -1,8 +1,19 @@
 name: CI
 
 on:
+  # O paths-ignore vale só para push: um commit de documentação na main não
+  # precisa rebuildar a imagem e redeployar a API.
+  #
+  # Em pull_request ele é deliberadamente omitido. O check `test` é
+  # obrigatório para merge, e um check que não roda fica pendente para
+  # sempre — um PR só de documentação nunca poderia ser mergeado.
   push:
     branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".gitignore"
+      - ".gitattributes"
   pull_request:
     branches: [main]
 
