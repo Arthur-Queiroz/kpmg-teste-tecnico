@@ -58,6 +58,26 @@ A 5432 do host de desenvolvimento pertence a outro container Docker
 `.env.test`/workflow de CI usam a mesma porta para o banco de teste.
 Contexto completo em `docs/09-DECISIONS.md`.
 
+## 7. CI: `@prisma/client` sem client gerado no runner
+
+**Sintoma**: primeiro run do CI falhou no lint/typecheck com dezenas de
+"type that could not be resolved" vindos de `@prisma/client`.
+**Causa**: o pnpm 10 só executa scripts de build de pacotes em
+`onlyBuiltDependencies`; o postinstall do `@prisma/client` (que gera o
+client) não roda no `pnpm install --frozen-lockfile` do runner. Localmente
+o client já existia porque `prisma migrate dev` o gerou.
+**Correção**: step explícito `pnpm --filter api exec prisma generate`
+logo após o install no workflow.
+
+## 8. CI: `pnpm --filter api prisma <cmd>` não invoca o binário
+
+**Sintoma**: o step de generate "passava" sem fazer nada, logando
+"None of the selected packages has a 'prisma' script".
+**Causa**: sem `exec`, o pnpm interpreta `prisma` como nome de script do
+package.json, não como binário de `node_modules/.bin`.
+**Correção**: `pnpm --filter api exec prisma generate` e
+`pnpm --filter api exec prisma migrate deploy` no workflow.
+
 ## O que **não** é problema (verificado)
 
 - `pnpm test` na raiz: o pnpm ignora automaticamente pacotes sem script
