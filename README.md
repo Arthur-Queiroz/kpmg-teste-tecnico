@@ -14,11 +14,19 @@ por exigência do desafio — todos os endpoints são públicos
 - **Backend**: https://kpmg.devarthur.com.br (VPS Hostinger, Docker)
 - **Swagger**: https://kpmg.devarthur.com.br/docs
 - **Health**: https://kpmg.devarthur.com.br/health
+- **Trilha de auditoria**: https://kpmg.devarthur.com.br/audit-logs
+
+Como acompanhar os logs da aplicação em produção:
+`docs/08-DEPLOYMENT.md`, seção "Observabilidade".
 
 ## Stack
 
 - **Backend**: NestJS 11 + Prisma 6 + PostgreSQL 16 + Zod
   (`nestjs-zod`) + Resend (e-mail).
+- **Persistência poliglota**: PostgreSQL para o domínio (dados
+  estruturados, CNPJ único, filtros combinados) e MongoDB para a trilha
+  de auditoria (eventos append-only, de esquema variável) — o porquê
+  está em `docs/09-DECISIONS.md`.
 - **Frontend**: React 19 + Vite + Tailwind 4 + React Router +
   React Hook Form.
 - **Compartilhado**: `packages/shared` — schemas Zod e validador de CNPJ
@@ -32,7 +40,7 @@ Pré-requisitos: Node 24, pnpm 10, Docker.
 
 ```bash
 pnpm install
-docker compose up -d                      # Postgres local (porta 5433 do host)
+docker compose up -d                      # Postgres (5433) e MongoDB (27017)
 
 cp apps/api/.env.example apps/api/.env    # valores de dev já preenchidos
 pnpm --filter @kpmg/shared build          # a api consome o dist/ do shared
