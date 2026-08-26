@@ -94,6 +94,84 @@ novo deploy para ter efeito, não basta reiniciar.
 Template real fica em `.env.example` na raiz de cada app — nunca
 commitar `.env` com valores reais.
 
+## Runbook: mudar configuração em produção
+
+Em produção **não existe arquivo `.env`**. O container recebe as
+variáveis de duas fontes distintas, e saber qual é qual evita editar o
+lugar errado:
+
+| Tipo | Onde vive | Exemplos |
+|---|---|---|
+| Não sensível | `env:` inline no manifesto `apps/kpmg.yaml` | `NOTIFICATION_EMAILS`, `CORS_ORIGIN`, `PORT` |
+| Sensível | `/var/lib/vps-apps/kpmg/secrets.env` na VPS | `DATABASE_URL`, `MONGO_URL`, `RESEND_API_KEY`, senhas |
+
+No manifesto, um segredo aparece como `fromSecret`. O `deployctl`
+resolve pelo **`name` da variável**, não pelo slug do `fromSecret`: uma
+entrada `name: MONGO_URL` + `fromSecret: mongo-url` procura a chave
+`MONGO_URL` no `secrets.env`. Se a chave faltar, o release **aborta com
+erro** — produção fica intacta, não sobe quebrada.
+
+### Armadilha: o manifesto existe em dois lugares
+
+`/etc/vps-infra` **não é um clone git**. O manifesto vive no repositório
+`vps-infra` (registro e histórico) e em `/etc/vps-infra/apps/kpmg.yaml`
+na VPS (o que o `deployctl` de fato lê). **Editar só o GitHub não muda
+nada em produção.** Atualize os dois; em caso de divergência, quem manda
+é o da VPS.
+
+### Passo a passo
+
+```bash
+ssh hostinger
+sudo nano /etc/vps-infra/apps/kpmg.yaml     # ou o secrets.env, se for segredo
+sudo deployctl validate kpmg                # valida antes de aplicar
+sudo deployctl status kpmg                  # copiar o currentDigest
+sudo deployctl release kpmg api sha256:<digest-atual>
+```
+
+Releasear com o **mesmo digest** é o ponto central: não rebuilda imagem
+nenhuma, apenas recria o container com o ambiente novo, passando pelo
+healthcheck e pelo swap. Zero downtime.
+
+Conferir depois:
+
+```bash
+sudo docker exec kpmg-api node -e "console.log(process.env.NOTIFICATION_EMAILS)"
+```
+
+### Reiniciar não aplica configuração
+
+`docker restart kpmg-api` **mantém as variáveis antigas** — o Docker
+congela o ambiente no momento em que o container é *criado*. Para pegar
+env nova é preciso **recriar**, que é exatamente o que o `release` faz.
+Vale igual para segredos: trocar a `RESEND_API_KEY` no `secrets.env` só
+surte efeito depois de um `release`.
+
+### Conferir se produção está no commit certo
+
+O deploy não copia código: publica uma imagem imutável e manda a VPS
+rodar aquele digest. Então "código desatualizado" se resume a comparar
+dois valores — o digest publicado pelo run do commit e o
+`currentDigest` do `deployctl status`.
+
+Isso não é teórico: durante um incidente do GitHub Actions, dois runs
+saíram da fila fora de ordem e o commit **mais antigo** terminou depois,
+sobrescrevendo o mais novo. Os dois runs reportaram sucesso — cada um
+fez o seu trabalho corretamente — e só a comparação de digests revelou
+a inversão. A correção é releasear o digest do commit certo, que já
+está no GHCR e já passou pela suíte:
+
+```bash
+sudo deployctl release kpmg api sha256:<digest-do-commit-mais-novo>
+```
+
+### Rollback
+
+```bash
+sudo deployctl status kpmg      # a lista de revisions traz os digests anteriores
+sudo deployctl rollback kpmg api
+```
+
 ## Backup
 
 Sem rotina de backup dedicada para este banco — decisão consciente,
