@@ -17,8 +17,11 @@
 | Schema Prisma + migration | Pronto | tabela `companies` criada |
 | Backend (CRUD completo) | Pronto, 10 unit + 16 e2e | ver "Como verificar" abaixo |
 | Frontend (2 telas completas) | Pronto, contra a API real | `pnpm --filter web dev` |
-| CI (lint + testes + build) | Pronto (`.github/workflows/ci.yml`) | push em `main` |
-| Deploy (VPS + Vercel) | Pendente | — |
+| CI (lint + testes + build + release) | Pronto (`.github/workflows/ci.yml`) | push em `main` |
+| Deploy backend (VPS, modelo vps-infra) | **No ar** | `https://kpmg.devarthur.com.br/health` |
+| Deploy frontend (Vercel) | **No ar** | `https://kpmg-test-frontend.vercel.app` |
+| Seed de produção | Pronto (4 empresas) | `GET /companies` → `total: 4` |
+| Envio de e-mail (Resend) | Pendente: falta `RESEND_API_KEY` real | envio é pulado com log sem quebrar |
 
 ## O que está pronto, por camada
 
@@ -88,11 +91,15 @@ pnpm --filter web dev                         # frontend em localhost:5173
 Endpoints: `GET/POST /companies`, `GET/PATCH/DELETE /companies/:id`,
 `GET /health`, Swagger em `http://localhost:3000/docs`.
 
-## CI
+## CI/CD
 
 `.github/workflows/ci.yml` roda em push/PR para `main`: install com cache
 pnpm, build do shared, lint (api + web), typecheck da api, testes
 unitários (shared + api), `prisma migrate deploy` contra um Postgres
 efêmero de service container e os 16 testes e2e, finalizando com build
-dos dois apps. Deploy (GHCR + VPS + Vercel) ainda não faz parte do
-workflow — ver seção Infra/Deploy em `TASKS.md`.
+dos dois apps. Na `main`, o job `release` (gated por `DEPLOY_ENABLED=true`)
+chama o reusable workflow `Arthur-Queiroz/vps-deploy`: build+push da
+imagem no GHCR por digest e `deployctl release kpmg api sha256:<digest>`
+via chave SSH confinada — o job `migrate` do manifesto roda
+`prisma migrate deploy` antes de cada swap do container. Detalhes do
+modelo em `docs/08-DEPLOYMENT.md`.
