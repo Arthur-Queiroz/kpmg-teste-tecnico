@@ -1,6 +1,6 @@
 import { COMPANY_TABLE_COLUMNS } from "./CompanyTable";
 
-const SKELETON_CELL_COUNT = 6;
+const SKELETON_CELL_COUNT = 7;
 
 export interface TableSkeletonProps {
   rowCount?: number;

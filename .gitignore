@@ -10,3 +10,6 @@ coverage/
 
 *.log
 .DS_Store
+
+# Enunciado do teste (documento da KPMG) — mantido apenas localmente
+Teste Técnico - FullStack.pdf

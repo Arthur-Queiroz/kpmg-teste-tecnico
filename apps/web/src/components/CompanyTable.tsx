@@ -5,7 +5,7 @@ import { maskCnpj } from "../lib/masks";
 
 /** Mesma grade usada pelo cabeçalho, pelas linhas e pelo skeleton. */
 export const COMPANY_TABLE_COLUMNS =
-  "minmax(250px, 1.7fr) minmax(150px, 1fr) minmax(145px, 1.1fr) minmax(150px, 1fr) minmax(110px, 0.8fr) 96px";
+  "minmax(230px, 1.6fr) minmax(150px, 1fr) minmax(140px, 1.1fr) minmax(140px, 1fr) minmax(105px, 0.75fr) minmax(105px, 0.75fr) 96px";
 
 const ICON_BUTTON_CLASS_NAME =
   "flex size-9 cursor-pointer items-center justify-center rounded-input border border-border bg-white transition-colors";
@@ -32,6 +32,7 @@ export function CompanyTable({
         <span>Nome Fantasia</span>
         <span>Cidade</span>
         <span>Criado em</span>
+        <span>Alterado em</span>
         <span className="text-right">Ações</span>
       </div>
 
@@ -68,6 +69,10 @@ export function CompanyTable({
 
           <span className="text-small text-text-muted tabular-nums">
             {formatDate(company.createdAt)}
+          </span>
+
+          <span className="text-small text-text-muted tabular-nums">
+            {formatDate(company.updatedAt)}
           </span>
 
           <div className="flex justify-end gap-1">
