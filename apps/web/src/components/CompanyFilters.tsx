@@ -22,9 +22,19 @@ export function CompanyFilters({
   return (
     <div className="flex flex-wrap items-center gap-3 border-b border-border px-5 py-4">
       <div className="relative max-w-[380px] flex-[1_1_300px]">
+        {searchTerm && (
+          <button
+            type="button"
+            onClick={() => onSearchTermChange("")}
+            aria-label="Limpar busca"
+            className="absolute top-1/2 left-2.5 -translate-y-1/2 cursor-pointer px-1 text-base leading-none text-text-faint transition-colors hover:text-text"
+          >
+            ×
+          </button>
+        )}
         <span
           aria-hidden="true"
-          className="absolute top-1/2 left-3.5 -translate-y-1/2 text-text-muted"
+          className="absolute top-1/2 right-3.5 -translate-y-1/2 text-text-muted"
         >
           ⌕
         </span>
@@ -34,7 +44,9 @@ export function CompanyFilters({
           onChange={(event) => onSearchTermChange(event.target.value)}
           placeholder="Buscar por nome, nome fantasia ou CNPJ..."
           aria-label="Buscar empresas"
-          className="h-10 w-full rounded-input border border-border bg-white pr-3.5 pl-8 text-[15px] outline-none transition-colors focus:border-accent focus:ring-3 focus:ring-accent/15"
+          // O × nativo do input[type=search] fica sempre à direita e não é
+          // posicionável; escondê-lo deixa o botão customizado à esquerda.
+          className="h-10 w-full rounded-input border border-border bg-white pr-9 pl-8 text-[15px] outline-none transition-colors focus:border-accent focus:ring-3 focus:ring-accent/15 [&::-webkit-search-cancel-button]:appearance-none"
         />
       </div>
 

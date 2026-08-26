@@ -391,9 +391,6 @@ export function CompanyFormPage() {
           </FormSection>
 
           <div className="flex items-center justify-end gap-3 rounded-card border border-border bg-white px-5 py-4 shadow-elevation-1">
-            <span className="mr-auto text-[13px] leading-[18px] text-text-muted">
-              Validação compartilhada com a API (CompanySchema, Zod).
-            </span>
             <Button
               variant="secondary"
               onClick={() => navigate("/")}
