@@ -1,19 +1,29 @@
 import { MongoClient } from 'mongodb';
 
-// TEMPORARY: measures whether the mongodb driver can connect from inside
-// Jest in CI (plain node connects in ~160ms; the app boot hangs).
+// TEMPORARY: captures the handshake document the driver sends from inside
+// Jest in CI (plain node connects fine; under Jest the server rejects the
+// client metadata).
 describe('mongo debug', () => {
   jest.setTimeout(15000);
 
   it('connects', async () => {
-    const startedAt = Date.now();
     const client = new MongoClient(process.env.MONGO_URL as string, {
       serverSelectionTimeoutMS: 10000,
+      monitorCommands: true,
     });
-    await client.connect();
-    console.log('CONECTOU EM', Date.now() - startedAt, 'ms');
-    await client.db().admin().ping();
-    console.log('PING OK');
+    client.on('commandStarted', (event) => {
+      console.log('HELLO-COMMAND:', JSON.stringify(event.command).slice(0, 600));
+    });
+    try {
+      await client.connect();
+      console.log('CONECTOU');
+    } catch (error) {
+      console.log(
+        'FALHOU:',
+        error instanceof Error ? error.message : String(error),
+      );
+      throw error;
+    }
     await client.close();
   });
 });
