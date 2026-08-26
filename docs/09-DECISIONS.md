@@ -160,3 +160,31 @@ ao conectar (a requisição caía no banco errado). O `docker-compose.yml`
 deste projeto publica `5433:5432`; em produção o backend conecta na
 instância compartilhada da VPS pela rede Docker interna, sem porta de
 host envolvida.
+
+## Postgres dedicado por app na VPS (não instância compartilhada)
+
+O planejamento (`08-DEPLOYMENT.md`, versão inicial) previa criar o
+database `kpmg_teste` na instância Postgres compartilhada da VPS. Na
+implementação, o deploy seguiu o modelo vps-infra (o mesmo dos apps
+migrados, ex.: chatjpt): cada app declara seu próprio Postgres
+`stateful` no manifesto — container `kpmg-postgres` na rede interna
+`net-kpmg`, com volume em `/var/lib/vps-apps/kpmg/pgdata`. Motivos:
+
+- o modelo vps-infra confina cada app à sua rede (`net-<app>` + `edge`);
+  conectar no Postgres compartilhado (rede `data`) furaria esse
+  isolamento;
+- ciclo de vida independente: upgrade, volume e credenciais do banco
+  pertencem ao app, sem risco de afetar outros projetos da VPS;
+- o banco é descartável por natureza (reprodutível via seed), então a
+  consolidação não trazia benefício real aqui.
+
+A porta 5433 do compose local segue valendo só para desenvolvimento.
+
+## Migrations como job `migrate` no release (não entrypoint)
+
+Em vez de rodar `prisma migrate deploy` no entrypoint do container, o
+manifesto declara um serviço `kind: job` (`migrate`) que roda com a
+mesma imagem do release antes do swap do serviço `api` (`runBefore`).
+Uma migration que falha aborta o release com produção intacta — no
+modelo entrypoint, o container novo subiria quebrado até o healthcheck
+derrubá-lo.

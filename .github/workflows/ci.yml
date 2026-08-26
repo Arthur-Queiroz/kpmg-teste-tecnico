@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+  packages: write # o job de release publica a imagem no GHCR
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -76,3 +80,20 @@ jobs:
         run: |
           pnpm --filter api build
           pnpm --filter web build
+
+  # Deploy na VPS (modelo vps-infra): build+push da imagem no GHCR por digest
+  # e release via chave SSH confinada. Só roda na main com DEPLOY_ENABLED=true
+  # (ver docs/08-DEPLOYMENT.md).
+  release:
+    if: github.ref == 'refs/heads/main' && vars.DEPLOY_ENABLED == 'true'
+    needs: test
+    uses: Arthur-Queiroz/vps-deploy/.github/workflows/app-deploy.yml@main
+    with:
+      app-id: kpmg
+      service: api
+      image-repo: arthur-queiroz/kpmg-teste-tecnico
+      context: .
+      dockerfile: apps/api/Dockerfile
+    secrets:
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      VPS_HOST: ${{ secrets.VPS_HOST }}

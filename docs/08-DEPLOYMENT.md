@@ -5,11 +5,19 @@
 - **Frontend**: React (Vite), deploy na **Vercel**, build estático.
 - **Backend**: NestJS, containerizado (Docker), deploy na **VPS
   Hostinger KVM2** (Debian 13), exposto via Cloudflare Tunnel + Caddy
-  em `kpmg.devarthur.com.br`.
-- **Banco de dados**: Postgres já existente na VPS (instância
-  consolidada por engine) — este projeto entra como um database
-  adicional (`kpmg_teste`), não uma instância isolada. Não é exposto
-  publicamente: só acessível pelo backend, na mesma rede Docker/VPS.
+  em `kpmg.devarthur.com.br`. O deploy segue o modelo vps-infra
+  (manifesto `apps/kpmg.yaml` no repo vps-infra, releases por digest via
+  `deployctl`).
+- **Banco de dados**: Postgres 16 **dedicado ao app** (serviço
+  `stateful` do manifesto, container `kpmg-postgres` na rede interna
+  `net-kpmg`, volume em `/var/lib/vps-apps/kpmg/pgdata`). Não é exposto
+  publicamente: só acessível pelo backend, na rede interna do app.
+  (O planejamento original previa um database na instância Postgres
+  compartilhada da VPS — a mudança está justificada em
+  `09-DECISIONS.md`.)
+- **Migrations**: `prisma migrate deploy` roda como job `migrate` do
+  manifesto, antes de cada swap do serviço `api` — falha aborta o
+  release com produção intacta (nunca `migrate dev`).
 
 ## Por que VPS própria em vez de Railway/Supabase
 
@@ -21,18 +29,26 @@ acessar a qualquer momento sem aviso prévio.
 
 ## CI/CD (GitHub Actions)
 
-Pipeline dispara em push para `main`:
+Pipeline dispara em push para `main` (`.github/workflows/ci.yml`):
 
 1. Instala dependências (pnpm workspace, cache habilitado).
-2. Roda lint + testes unitários e e2e (`apps/api` e `packages/shared`).
-3. Se os testes passam: build da imagem Docker do backend.
-4. Push da imagem para o GitHub Container Registry (GHCR).
-5. SSH na VPS: pull da nova imagem, `docker compose up -d`.
-6. **`npx prisma migrate deploy`** roda como parte do entrypoint do
-   container em produção — nunca `migrate dev`.
+2. Build de `packages/shared` + `prisma generate` (postinstalls não rodam
+   sob o pnpm — ver `docs/status/LESSONS-TESTS.md`).
+3. Roda lint + typecheck + testes unitários (`apps/api` e
+   `packages/shared`) e e2e contra Postgres service container.
+4. Build dos dois apps.
+5. **Release** (só na `main`, com `DEPLOY_ENABLED=true`): o job chama o
+   reusable workflow `Arthur-Queiroz/vps-deploy`, que faz build+push da
+   imagem no GHCR **por digest** e dispara `deployctl release kpmg api
+   sha256:<digest>` via chave SSH confinada (`deploy-kpmg`).
+6. Na VPS, o `deployctl` roda o job `migrate` (`prisma migrate deploy`
+   com a mesma imagem do release) **antes** do swap do container — falha
+   de migration aborta o release com produção intacta. Nunca
+   `migrate dev`.
 
 Frontend: pipeline nativo da Vercel (deploy automático por push/PR),
-sem necessidade de step manual no GitHub Actions.
+sem necessidade de step manual no GitHub Actions. Build configurado no
+repositório via `vercel.json`.
 
 ## Variáveis de ambiente
 
