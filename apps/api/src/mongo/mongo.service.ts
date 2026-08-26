@@ -1,3 +1,5 @@
+import * as os from 'node:os';
+
 import {
   Injectable,
   Logger,
@@ -25,7 +27,18 @@ export class MongoService implements OnModuleInit, OnModuleDestroy {
     try {
       // The audit trail is best-effort by design: if MongoDB is unreachable
       // the API still boots, with logging disabled (docs/09-DECISIONS.md).
-      this.client = new MongoClient(url, { serverSelectionTimeoutMS: 5000 });
+      //
+      // `runtimeAdapters.os` is injected on purpose: without it the driver
+      // loads `os` through a dynamic `import()`, which Jest (CJS, no
+      // --experimental-vm-modules) cannot resolve inside its VM context. The
+      // promise rejects, the client metadata comes out empty, and the server
+      // refuses the handshake with "Missing required sub-document 'driver'".
+      // Injecting the adapter keeps the handshake identical in tests and in
+      // production.
+      this.client = new MongoClient(url, {
+        serverSelectionTimeoutMS: 5000,
+        runtimeAdapters: { os },
+      });
       await this.client.connect();
     } catch (error) {
       this.logger.error(

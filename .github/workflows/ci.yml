@@ -88,12 +88,6 @@ jobs:
         env:
           DATABASE_URL: postgresql://postgres:postgres@localhost:5433/kpmg_teste_test
 
-      - name: DEBUG mongo connectivity (temporary)
-        working-directory: apps/api
-        run: node -e "const {MongoClient}=require('mongodb'); const c=new MongoClient(process.env.MONGO_URL,{serverSelectionTimeoutMS:4000}); c.connect().then(async()=>{console.log('CONECTOU'); await c.db().admin().ping(); await c.close();}).catch(e=>{console.error('FALHOU:', e.constructor.name, e.message); process.exit(1);})"
-        env:
-          MONGO_URL: mongodb://kpmg:kpmg@127.0.0.1:27017/kpmg_logs_test?authSource=admin
-
       - name: E2E tests (CRUD + no-auth proof)
         run: pnpm --filter api test:e2e
 
