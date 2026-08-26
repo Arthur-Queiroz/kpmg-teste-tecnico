@@ -30,7 +30,7 @@
 
 ## Backend
 
-- [ ] `todo` — Log de auditoria em MongoDB (eventos de escrita do CRUD + `GET /audit-logs`)
+- [x] `done` — Log de auditoria em MongoDB (eventos de escrita do CRUD + `GET /audit-logs`)
 
 - [x] `done` — Schema Prisma: Company (migration `init` aplicada, tabela `companies`)
 - [x] `done` — Schemas Zod compartilhados: Company, Address, Cnpj
@@ -76,6 +76,8 @@
 - [x] `done` — CORS configurado entre os dois domínios
 - [x] `done` — `prisma migrate deploy` automatizado (job `migrate` antes de cada swap)
 - [x] `done` — Seed de produção (4 empresas; script reprodutível em `apps/api/prisma/seed.js`)
+- [x] `done` — MongoDB stateful na VPS (`kpmg-mongo` em `net-kpmg`, secrets no `secrets.env`)
+- [x] `done` — Smoke test pós-deploy (`/health`, `/companies`, `/audit-logs`) no pipeline
 
 > **Produção no ar**: frontend em `https://kpmg-test-frontend.vercel.app`,
 > backend em `https://kpmg.devarthur.com.br` (Swagger em `/docs`).
