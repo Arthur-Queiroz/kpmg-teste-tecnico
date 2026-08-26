@@ -6,7 +6,17 @@ Aplicação full-stack de cadastro de empresas (CRUD completo, validação de
 CNPJ com dígito verificador, endereço estruturado, autofill de CEP via
 ViaCEP e notificação por e-mail a cada novo cadastro). Sem autenticação,
 por exigência do desafio — todos os endpoints são públicos
-(`docs/CONSTRAINTS.md`).
+([restrições do projeto](docs/CONSTRAINTS.md)).
+
+## Funcionalidades
+
+- Cadastro, listagem paginada, edição e exclusão de empresas.
+- Busca por nome, nome fantasia ou CNPJ e filtro por estado.
+- Validação compartilhada entre frontend e backend com Zod.
+- Consulta direta ao ViaCEP para preenchimento do endereço.
+- Notificação por e-mail ao cadastrar uma empresa.
+- Trilha de auditoria para operações de criação, atualização e exclusão.
+- API pública documentada com Swagger, sem autenticação por requisito.
 
 ## Produção
 
@@ -17,7 +27,7 @@ por exigência do desafio — todos os endpoints são públicos
 - **Trilha de auditoria**: https://kpmg.devarthur.com.br/audit-logs
 
 Como acompanhar os logs da aplicação em produção:
-`docs/08-DEPLOYMENT.md`, seção "Observabilidade".
+[guia de deployment, seção &#34;Observabilidade&#34;](docs/08-DEPLOYMENT.md#observabilidade-onde-ficam-os-logs).
 
 ## Stack
 
@@ -34,6 +44,46 @@ Como acompanhar os logs da aplicação em produção:
 - **Monorepo**: pnpm workspaces (`apps/api`, `apps/web`,
   `packages/shared`).
 
+## Arquitetura
+
+```mermaid
+flowchart LR
+    user[Usuário]
+    recipients[Grupo de e-mails<br/>pré-configurado]
+    viacep[ViaCEP]
+    shared[packages/shared<br/>schemas Zod e CNPJ]
+
+    subgraph vercel[Vercel]
+        frontend[Frontend<br/>React + Vite]
+    end
+
+    subgraph vps[VPS Hostinger]
+        backend[API pública<br/>NestJS + Prisma]
+        postgres[(PostgreSQL<br/>empresas)]
+        mongo[(MongoDB<br/>trilha de auditoria)]
+    end
+
+    resend[Resend]
+
+    user --> frontend
+    frontend -->|CRUD via HTTPS/REST| backend
+    frontend -->|Consulta de CEP| viacep
+    backend -->|Persistência do domínio| postgres
+    backend -.->|Eventos de escrita<br/>best-effort| mongo
+    backend -.->|Notificação assíncrona<br/>best-effort| resend
+    resend -->|Entrega| recipients
+    shared -.->|Validação| frontend
+    shared -.->|Revalidação| backend
+```
+
+No cadastro, a API persiste a empresa no PostgreSQL e responde `201` sem
+esperar a entrega do e-mail. A notificação é enviada de forma assíncrona pelo
+Resend; uma falha no provedor é registrada nos logs, mas não desfaz o cadastro.
+As escritas do CRUD também geram eventos no MongoDB sem torná-lo dependência
+crítica do domínio. O fluxo completo está em
+[Arquitetura](docs/04-ARCHITECTURE.md) e as decisões estão em
+[Decisões técnicas](docs/09-DECISIONS.md).
+
 ## Setup local
 
 Pré-requisitos: Node 24, pnpm 10, Docker.
@@ -49,6 +99,11 @@ pnpm --filter api exec prisma migrate dev      # cria a tabela companies
 pnpm --filter api dev                     # backend em localhost:3000 (Swagger em /docs)
 pnpm --filter web dev                     # frontend em localhost:5173
 ```
+
+Sem `RESEND_API_KEY`, o backend local continua funcional e apenas registra que
+o envio foi ignorado. Para testar e-mails, preencha `RESEND_API_KEY` e
+`NOTIFICATION_EMAILS` em `apps/api/.env`. As demais variáveis estão descritas
+no [guia de deployment](docs/08-DEPLOYMENT.md#variáveis-de-ambiente).
 
 ## Testes
 
@@ -75,6 +130,6 @@ O frontend deploya automaticamente pela integração nativa da Vercel.
 ## Documentação
 
 Toda a documentação de planejamento, decisões e verificação está em
-`docs/` — comece por `docs/status/README.md` (fotografia do que está
-pronto) e `docs/09-DECISIONS.md` (raciocínio das decisões). O mapa
-completo está em `AGENTS.md`.
+`docs/` — comece pelo [status atual](docs/status/README.md) e pelas
+[decisões técnicas](docs/09-DECISIONS.md). O mapa completo está em
+[AGENTS.md](AGENTS.md).
