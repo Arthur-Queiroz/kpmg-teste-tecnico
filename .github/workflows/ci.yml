@@ -46,6 +46,11 @@ jobs:
       - name: Build shared package
         run: pnpm --filter @kpmg/shared build
 
+      # O postinstall do @prisma/client não roda (pnpm só permite scripts de
+      # build allowlistados), então o client precisa ser gerado explicitamente.
+      - name: Generate Prisma Client
+        run: pnpm --filter api prisma generate
+
       - name: Lint
         run: |
           pnpm --filter api lint
