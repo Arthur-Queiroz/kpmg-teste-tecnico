@@ -22,8 +22,18 @@ export class MongoService implements OnModuleInit, OnModuleDestroy {
       this.logger.warn('MONGO_URL not set — audit logging disabled');
       return;
     }
-    this.client = new MongoClient(url);
-    await this.client.connect();
+    try {
+      // The audit trail is best-effort by design: if MongoDB is unreachable
+      // the API still boots, with logging disabled (docs/09-DECISIONS.md).
+      this.client = new MongoClient(url, { serverSelectionTimeoutMS: 5000 });
+      await this.client.connect();
+    } catch (error) {
+      this.logger.error(
+        'MongoDB unreachable — audit logging disabled',
+        error instanceof Error ? error.stack : String(error),
+      );
+      this.client = null;
+    }
   }
 
   async onModuleDestroy(): Promise<void> {
