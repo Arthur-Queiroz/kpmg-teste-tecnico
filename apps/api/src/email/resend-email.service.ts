@@ -5,7 +5,7 @@ import { Resend } from 'resend';
 
 import { EmailService } from './email.service';
 
-const EMAIL_FROM = 'Cadastro de Empresas <onboarding@resend.dev>';
+const EMAIL_FROM = 'Cadastro de Empresas <noreply@mail.devarthur.com.br>';
 
 /**
  * Resend-backed EmailService. Without RESEND_API_KEY or recipients configured
