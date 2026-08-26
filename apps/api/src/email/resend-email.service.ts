@@ -35,7 +35,7 @@ export class ResendEmailService extends EmailService {
       return;
     }
 
-    await this.resend.emails.send({
+    const { error } = await this.resend.emails.send({
       from: EMAIL_FROM,
       to: this.recipients,
       subject: `Nova empresa cadastrada: ${company.name}`,
@@ -47,5 +47,17 @@ export class ResendEmailService extends EmailService {
         `Criado em: ${company.createdAt}`,
       ].join('\n'),
     });
+
+    // The Resend SDK resolves with { data, error } instead of throwing on
+    // API errors — without this check a rejected send would be invisible.
+    if (error) {
+      throw new Error(
+        `Resend rejected the send: ${error.name} — ${error.message}`,
+      );
+    }
+
+    this.logger.log(
+      `Creation e-mail sent for company ${company.id} (${this.recipients.length} recipient(s))`,
+    );
   }
 }
