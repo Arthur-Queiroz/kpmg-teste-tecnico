@@ -172,6 +172,56 @@ sudo deployctl status kpmg      # a lista de revisions traz os digests anteriore
 sudo deployctl rollback kpmg api
 ```
 
+## Observabilidade: onde ficam os logs
+
+| O quê | Onde | Como ver |
+|---|---|---|
+| API (NestJS) | container `kpmg-api` na VPS | `sudo docker logs kpmg-api` |
+| Postgres | container `kpmg-postgres` | `sudo docker logs kpmg-postgres` |
+| MongoDB | container `kpmg-mongo` | `sudo docker logs kpmg-mongo` |
+| Proxy de borda | container `caddy` | `sudo docker logs caddy` |
+| Pipeline | GitHub Actions | aba Actions do repositório |
+| Build/deploy do frontend | Vercel | dashboard do projeto |
+| Entrega de e-mail | Resend | painel do Resend (status por mensagem) |
+
+### Comandos do dia a dia
+
+```bash
+ssh hostinger
+sudo docker logs kpmg-api --tail 50          # últimas 50 linhas
+sudo docker logs kpmg-api -f                 # acompanhar em tempo real
+sudo docker logs kpmg-api --since 15m        # últimos 15 minutos
+sudo docker logs kpmg-api --timestamps       # com horário de cada linha
+sudo docker logs kpmg-api 2>&1 | grep -i error
+sudo deployctl status kpmg                   # o que está no ar e o histórico de revisões
+```
+
+O `sudo` é necessário: o usuário `agent` não pertence ao grupo docker.
+
+### O que você encontra nesses logs
+
+Boot da aplicação (módulos e rotas mapeadas), erros não tratados
+capturados pelo `HttpExceptionFilter`, e os avisos explícitos do
+domínio — falha no envio de e-mail e falha na gravação da trilha de
+auditoria, ambos logados sem derrubar a requisição.
+
+### Duas limitações, ditas de forma clara
+
+1. **Não há log de requisições.** Nem o Caddy (sem diretiva `log`) nem o
+   NestJS (sem interceptor) registram chamadas individuais. Verificado:
+   um `GET /health` real não aparece em nenhum dos dois. Para auditar
+   *o que foi alterado* existe a trilha em `GET /audit-logs`, que cobre
+   as operações de escrita do CRUD — mas não substitui um access log.
+2. **Os logs zeram a cada deploy.** Cada release cria um container novo
+   e remove o antigo, então `docker logs kpmg-api` mostra apenas desde a
+   última publicação. A retenção é a padrão do driver `json-file` com
+   rotação (`max-size=10m`, `max-file=3`), ou seja, no máximo 30 MB por
+   container — e nada é enviado para fora da VPS.
+
+Para um teste técnico isso é suficiente e é uma escolha consciente:
+centralização de logs (Loki, ELK) e access log estruturado seriam o
+próximo passo natural num sistema com tráfego real.
+
 ## Backup
 
 Sem rotina de backup dedicada para este banco — decisão consciente,
