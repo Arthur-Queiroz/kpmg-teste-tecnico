@@ -27,6 +27,7 @@ duplicação e divergência entre os dois.
 | `docs/08-DEPLOYMENT.md` | Deploy, CI/CD, variáveis de ambiente |
 | `docs/09-DECISIONS.md` | Raciocínio por trás de cada decisão |
 | `docs/10-CONVENTIONS.md` | Nomenclatura — **leitura obrigatória antes de nomear qualquer coisa** |
+| `docs/11-DEFESA-TECNICA.md` | Perguntas prováveis do avaliador e as respostas, com links para a fonte de cada uma |
 | `docs/CONSTRAINTS.md` | O que NÃO implementar (autenticação) |
 | `docs/design.md` | Tokens visuais para o frontend |
 | `docs/status/` | O que já está implementado e verificado (fotografia atual) |
